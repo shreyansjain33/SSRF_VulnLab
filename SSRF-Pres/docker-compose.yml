@@ -1,0 +1,89 @@
+version: "3.0"
+
+services:
+
+  # Apache (web server)
+  apache:
+    container_name: ssrf-apache
+    image: webdevops/php-apache
+    ports:
+      - 8000:80
+    volumes:
+      - ./html:/app
+      - ./php:/root/
+      # Mount your web files into the container
+    depends_on:
+      - couchdb
+    networks:
+      - network2
+
+  # MySQL
+  # mysql:
+  #   container_name: ssrf-mysql
+  #   image: mysql:latest
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #     MYSQL_DATABASE: ssrf-db
+  #     MYSQL_USER: admin
+  #     MYSQL_PASSWORD: root
+  #   ports:
+  #     - 3306:3306
+  #   volumes:
+  #     - ./mysql-data:/var/lib/mysql
+  #     # Persist MySQL data
+  #   networks:
+  #     - network2
+
+  # CouchDB
+  couchdb:
+    container_name: ssrf-couchDB
+    build:
+      dockerfile: ./docker-couchdb
+    image: couchdb:latest
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: password
+    ports:
+      - 4369:4369
+      - 5984:5984
+      - 9100:9100
+    volumes:
+      - ./couchdb-data/data:/opt/couchdb/data
+      # Persist CouchDB data
+    networks:
+      - network2
+
+  # phpMyAdmin
+  phpmyadmin:
+    container_name: ssrf-phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql #same name as mysql service name
+      PMA_PORT: 3306
+      PMA_USER: admin
+      PMA_PASSWORD: root
+    restart: always
+    ports:
+      - 8080:80
+    networks:
+      - network2
+
+  # Node JS SSRF App
+  nodejs:
+    container_name: ssrf-nodejs
+    build:
+      dockerfile: ./docker-nodejs
+    image: ssrf-nodejs:latest
+    ports:
+      - 9000:9000
+    networks:
+      - network1
+      - network2
+
+networks:
+  network1:
+    name: ssrf-net
+    external: true
+  network2:
+    name: internal-net
+    external: true

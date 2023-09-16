@@ -1,0 +1,18 @@
+FROM node:current
+RUN mkdir -p /usr/src/app
+RUN mkdir -p /usr/src/app2
+WORKDIR /usr/src/app
+
+COPY ssrf.js /usr/src/app/
+COPY backup /usr/src/app2/
+
+#RUN npm install -g http express needle command-line-args nohup forever
+RUN npm install http express needle command-line-args
+
+COPY entrypoint.sh /usr/src/app/
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+
+EXPOSE 7000
+EXPOSE 9000
